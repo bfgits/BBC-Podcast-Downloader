@@ -5,7 +5,7 @@ from tkinter import ttk, scrolledtext, messagebox, filedialog
 from threading import Thread
 import re
 from urllib.parse import urljoin
-import pyperclip 
+import pyperclip
 
 class PodcastScraper:
     def __init__(self, root):

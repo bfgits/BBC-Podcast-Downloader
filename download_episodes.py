@@ -47,20 +47,20 @@ class EpisodeDownloader:
         # Remove file extension
         name_without_ext = os.path.splitext(filename)[0]
         
-        # Remove common suffixes like '_download'
-        name_without_ext = re.sub(r'_download$', '', name_without_ext)
+        # Remove common suffixes like '_download' and '_worksheet' (case-insensitive)
+        name_without_ext = re.sub(r'_(download|worksheet)$', '', name_without_ext, flags=re.IGNORECASE)
         
-        # Extract the episode name (everything after date and '6min_english_')
-        # Pattern: YYMMDD_6min_english_episode_name
-        match = re.search(r'\d{6}_6min_english_(.+)', name_without_ext)
+        # Extract the episode name including date
+        # Pattern: YYMMDD_(6min_english|6_minute_english)_episode_name
+        match = re.search(r'(\d{6}_(?:6min_english|6_minute_english)_.+)', name_without_ext, flags=re.IGNORECASE)
         if match:
             episode_name = match.group(1)
-            # Clean up the name: replace underscores with spaces, capitalize
-            episode_name = episode_name.replace('_', ' ').title()
+            # Remove _6_minute_english or _6min_english from the folder name
+            episode_name = re.sub(r'_6_?min(?:ute)?_english', '', episode_name, flags=re.IGNORECASE)
             return episode_name
         
-        # Fallback: use the filename without extension
-        return name_without_ext.replace('_', ' ').title()
+        # Fallback: return the cleaned name as-is
+        return name_without_ext
     
     def parse_links_file(self) -> List[Tuple[str, str, List[str]]]:
         """
@@ -166,11 +166,15 @@ class EpisodeDownloader:
             episode_success = True
             for url in urls:
                 filename = os.path.basename(urlparse(url).path)
-                save_path = episode_dir / filename
+                
+                # Clean filename by removing _download, _worksheet, and _6_minute_english
+                clean_filename = filename.replace('_download.mp3', '.mp3').replace('_worksheet.pdf', '.pdf')
+                clean_filename = clean_filename.replace('_6_minute_english', '')
+                save_path = episode_dir / clean_filename
                 
                 # Skip if file already exists
                 if save_path.exists():
-                    print(f"  Skipping: {filename} (already exists)")
+                    print(f"  Skipping: {clean_filename} (already exists)")
                     continue
                 
                 if not self.download_file(url, save_path):

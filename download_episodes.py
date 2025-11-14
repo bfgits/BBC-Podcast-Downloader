@@ -47,8 +47,8 @@ class EpisodeDownloader:
         # Remove file extension
         name_without_ext = os.path.splitext(filename)[0]
         
-        # Remove common suffixes like '_download' and '_worksheet' (case-insensitive)
-        name_without_ext = re.sub(r'_(download|worksheet)$', '', name_without_ext, flags=re.IGNORECASE)
+        # Remove common suffixes like '_download', '_download_', and '_worksheet' (case-insensitive)
+        name_without_ext = re.sub(r'_(download_?|worksheet)$', '', name_without_ext, flags=re.IGNORECASE)
         
         # Extract the episode name including date
         # Pattern: YYMMDD_(6min_english|6_minute_english)_episode_name
@@ -57,6 +57,8 @@ class EpisodeDownloader:
             episode_name = match.group(1)
             # Remove _6_minute_english or _6min_english from the folder name
             episode_name = re.sub(r'_6_?min(?:ute)?_english', '', episode_name, flags=re.IGNORECASE)
+            # Remove apostrophes and other problematic characters
+            episode_name = episode_name.replace("'", "")
             return episode_name
         
         # Fallback: return the cleaned name as-is
@@ -103,7 +105,9 @@ class EpisodeDownloader:
             
             if urls:
                 # Create episode directory name (safe for filesystem)
-                safe_dir_name = re.sub(r'[<>:"/\\|?*]', '', ep_name)
+                # Replace apostrophes and other problematic characters
+                safe_dir_name = ep_name.replace("'", "").replace("`", "")
+                safe_dir_name = re.sub(r'[<>:"/\\|?*]', '', safe_dir_name)
                 result.append((ep_name, safe_dir_name, urls))
         
         return result
@@ -168,8 +172,11 @@ class EpisodeDownloader:
                 filename = os.path.basename(urlparse(url).path)
                 
                 # Clean filename by removing _download, _worksheet, and _6_minute_english
+                # Also handle apostrophes and other special characters
                 clean_filename = filename.replace('_download.mp3', '.mp3').replace('_worksheet.pdf', '.pdf')
+                clean_filename = clean_filename.replace('_download_.mp3', '.mp3')  # Handle trailing underscore
                 clean_filename = clean_filename.replace('_6_minute_english', '')
+                clean_filename = clean_filename.replace("'", "")  # Remove apostrophes from filename
                 save_path = episode_dir / clean_filename
                 
                 # Skip if file already exists

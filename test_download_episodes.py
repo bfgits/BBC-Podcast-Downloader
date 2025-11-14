@@ -37,6 +37,14 @@ class TestEpisodeDownloader(unittest.TestCase):
             {
                 'url': 'https://downloads.bbc.co.uk/learningenglish/features/6min/251113_6_minute_english_how_important_is_play_download.mp3',
                 'expected': '251113_how_important_is_play'
+            },
+            {
+                'url': "https://downloads.bbc.co.uk/learningenglish/features/6min/250814_6_minute_english_grown-ups_buying_kids'_toys_worksheet.pdf",
+                'expected': "250814_grown-ups_buying_kids_toys"
+            },
+            {
+                'url': "https://downloads.bbc.co.uk/learningenglish/features/6min/250814_6_minute_english_grown-ups_buying_kids'_toys_download_.mp3",
+                'expected': "250814_grown-ups_buying_kids_toys"
             }
         ]
         
@@ -50,8 +58,8 @@ class TestEpisodeDownloader(unittest.TestCase):
         """Test parsing of links file and grouping by episode"""
         episodes = self.downloader.parse_links_file()
         
-        # Should have 3 episodes in test file
-        self.assertEqual(len(episodes), 3, "Should parse 3 episodes from test file")
+        # Should have 4 episodes in test file
+        self.assertEqual(len(episodes), 4, "Should parse 4 episodes from test file")
         
         # Check that each episode has both PDF and MP3
         for episode_name, dir_name, urls in episodes:
